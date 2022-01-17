@@ -5,6 +5,7 @@ import android.app.Activity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.app.KeyguardManager;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -14,8 +15,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
@@ -33,10 +36,15 @@ public class LoginActivity extends AppCompatActivity {
 
     private LoginViewModel loginViewModel;
     private ActivityLoginBinding binding;
+    KeyguardManager mKM;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+
+        mKM = (KeyguardManager) getBaseContext().getSystemService(getBaseContext().KEYGUARD_SERVICE);
 
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -148,5 +156,28 @@ public class LoginActivity extends AppCompatActivity {
 
     private void showLoginFailed(@StringRes Integer errorString) {
         Toast.makeText(getApplicationContext(), errorString, Toast.LENGTH_SHORT).show();
+    }
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        //Toast.makeText(this, "You pressed a button!", Toast.LENGTH_LONG).show();
+        if ((keyCode == KeyEvent.KEYCODE_HOME || keyCode == KeyEvent.KEYCODE_BACK)) {
+            //Toast.makeText(this, "You pressed a button! " + keyCode, Toast.LENGTH_LONG).show();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+    @Override
+    public void onAttachedToWindow() {
+        this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+        //this.getWindow().setType(WindowManager.LayoutParams.TYPE_KEYGUARD_DIALOG);
+        super.onAttachedToWindow();
+    }
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (Intent.ACTION_MAIN.equals(intent.getAction())) {
+            Log.i("MyLauncher", "onNewIntent: HOME Key");
+
+        }
     }
 }

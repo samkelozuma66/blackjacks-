@@ -148,6 +148,7 @@ public class HomeFragment extends Fragment {
         }
         return adJson;
     }
+
     public String getCpInfo(String user_id)
     {
         String ad = "http://192.168.1.41/userm/get_cpInfo.php?"

@@ -47,13 +47,14 @@ public class checkpoinAdapter extends RecyclerView.Adapter<checkpoinAdapter.MyVi
         View view = inflater.inflate(R.layout.checkpoint_layout, parent, false);
         MyViewHolder holder = new MyViewHolder(view);
         return holder;
+
     }
 
     @Override
     public void onBindViewHolder(@NonNull @NotNull MyViewHolder holder, int position) {
         try {
             cpArray  = cpList.getJSONObject(position);
-            holder.cpCode.setText(cpArray.getString("cp_code"));
+             holder.cpCode.setText(cpArray.getString("cp_code"));
             String data = cpArray.getString("data");
             JSONArray jarr =  new JSONArray(data);
             if(jarr.getString(0).equals("yes"))
