@@ -56,6 +56,10 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -70,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
     JSONObject shiftObj;
     JSONObject cpObj;
     String cpInfo;
+    ScheduledExecutorService scheduler;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -78,6 +83,22 @@ public class MainActivity extends AppCompatActivity {
         Intent i = getIntent();
         email = i.getStringExtra("username");
         Timer timer = new Timer();
+        scheduler = Executors.newScheduledThreadPool(1);
+        final Runnable runnable = new Runnable() {
+            int countdownStarter = 120;
+
+            public void run() {
+
+                System.out.println(countdownStarter);
+                countdownStarter--;
+
+                if (countdownStarter < 0) {
+                    System.out.println("Timer Over!");
+                    sendNotification(email,"Failed to attend to device in 2 min");
+                    scheduler.shutdown();
+                }
+            }
+        };
         String userDetails = getUserdata();
         try {
             jobj = new JSONArray(userDetails);
@@ -105,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
             SimpleDateFormat format = new SimpleDateFormat();
 
             startTime = cal.getTime();
-            if (startTime.getHours()  < m.getHours())
+            if (startTime.getHours()    < m.getHours())
                 startTime.setHours(m.getHours());
 
             if (startTime.getMinutes()  < m.getMinutes())
@@ -163,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
                     PendingIntent pIntent = PendingIntent.getBroadcast(getBaseContext(), 1, intent, 0);
                     notificationBuilder.addAction(R.drawable.ic_menu_share, "OK",pIntent);
 
-                    BroadcastReceiver br = new MyBroadcastReceiver(mp);
+                    BroadcastReceiver br = new MyBroadcastReceiver(mp,scheduler);
 
                     IntentFilter filter = new IntentFilter("action.name");
                     //filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
@@ -189,7 +210,9 @@ public class MainActivity extends AppCompatActivity {
 
 // notificationID allows you to update the notification later on.
                     mNotificationManager.notify(1, mBuilder.build());*/
-
+                    scheduler.scheduleAtFixedRate(runnable, 0, 1, SECONDS);
+                    //scheduler.schedule(runnable,0,SECONDS);
+                    //scheduler.execute(runnable);
                     mp.start();
                 }
             },startTime,minu * 60 * 1000);
@@ -458,9 +481,11 @@ public class MainActivity extends AppCompatActivity {
     }
     public static class MyBroadcastReceiver extends BroadcastReceiver {
         MediaPlayer mediap;
-        public MyBroadcastReceiver(MediaPlayer mplayer)
+        ScheduledExecutorService scheduler;
+        public MyBroadcastReceiver(MediaPlayer mplayer,ScheduledExecutorService scheduler)
         {
             this.mediap = mplayer;
+            this.scheduler = scheduler;
         }
         private static final String TAG = "MyBroadcastReceiver";
 
@@ -468,6 +493,7 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
 
             mediap.stop();
+            scheduler.shutdown();
             StringBuilder sb = new StringBuilder();
             sb.append("Action: " + intent.getAction() + "\n");
             sb.append("URI: " + intent.toUri(Intent.URI_INTENT_SCHEME).toString() + "\n");
@@ -477,5 +503,38 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(context, log, Toast.LENGTH_LONG).show();
         }
 
+    }
+
+    public String sendNotification(String email,String notification)
+    {
+        String ad = "http://192.168.1.41/userm/app_send_notification.php?"
+                + "email=" + email
+                + "&notification=" + notification;
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        String adJson = "";
+        JSONArray jobj = null;
+        StrictMode.setThreadPolicy(policy);
+        try {
+            URL url = new URL(ad);
+            InputStream ist = (InputStream) url.getContent();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(ist));
+            StringBuilder result = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                result.append(line);
+            }
+            System.out.println(result.toString());
+
+            adJson = result.toString();
+            //jobj = new JSONArray(adJson);
+            //jobj.length();
+
+            //System.out.println("ss " + jobj.getJSONObject(0).getString("header"));
+        } catch (IOException  e) {
+            e.printStackTrace();
+            System.out.println(e);
+        }
+        return adJson;
     }
 }
