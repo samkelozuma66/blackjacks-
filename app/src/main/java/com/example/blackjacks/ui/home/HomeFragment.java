@@ -40,19 +40,28 @@ public class HomeFragment extends Fragment {
     JSONArray jobj;
     JSONObject userDetailsObj;
     JSONObject cpObj;
+    JSONObject siteObj;
     String cpInfo;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
         String userDetails = getUserdata();
+
         try {
             jobj = new JSONArray(userDetails);
             userDetailsObj = new JSONObject(jobj.getString(0));
 
             cpInfo = getCpInfo(userDetailsObj.getString("id"));
+
+            String siteDetails = getSiteInfo(userDetailsObj.getString("id"));
+            jobj = new JSONArray(siteDetails);
+            siteObj = new JSONObject(jobj.getString(0));
+            System.out.println("siteObj "+siteObj.getString("site_name"));
+
             jobj = new JSONArray(cpInfo);
             cpObj = new JSONObject(jobj.getString(0));
+
 
 
         } catch (Exception e) {
@@ -77,8 +86,9 @@ public class HomeFragment extends Fragment {
         TextView name        = binding.name;
         TextView email       = binding.email;
         TextView contact     = binding.contact;
-        TextView gender       = binding.gender;
-        TextView user_type     = binding.userType;
+        TextView gender      = binding.gender;
+        TextView user_type   = binding.userType;
+        TextView site        = binding.site;
 
         try {
 
@@ -87,6 +97,8 @@ public class HomeFragment extends Fragment {
             contact.setText(userDetailsObj.getString("mobile"));
             gender.setText(userDetailsObj.getString("gender"));
             user_type.setText(userDetailsObj.getString("user_type"));
+
+            site.setText(siteObj.getString("site_name"));
 
 
             String uril = "http://192.168.1.41/userm/images/"+userDetailsObj.getString("image");
@@ -168,6 +180,38 @@ public class HomeFragment extends Fragment {
                 result.append(line);
             }
             System.out.println(result.toString());
+
+            adJson = result.toString();
+            //jobj = new JSONArray(adJson);
+            //jobj.length();
+
+            //System.out.println("ss " + jobj.getJSONObject(0).getString("header"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println(e);
+        }
+        return adJson;
+    }
+
+    public String getSiteInfo(String user_id)
+    {
+        String ad = "http://192.168.1.41/userm/get_siteInfo.php?"
+                + "user_id=" + user_id;
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        String adJson = "";
+        JSONArray jobj = null;
+        StrictMode.setThreadPolicy(policy);
+        try {
+            URL url = new URL(ad);
+            InputStream ist = (InputStream) url.getContent();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(ist));
+            StringBuilder result = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                result.append(line);
+            }
+            System.out.println("Site info " +  result.toString());
 
             adJson = result.toString();
             //jobj = new JSONArray(adJson);

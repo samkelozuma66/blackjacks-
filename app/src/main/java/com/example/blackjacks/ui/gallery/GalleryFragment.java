@@ -19,6 +19,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.budiyev.android.codescanner.CodeScanner;
 import com.budiyev.android.codescanner.CodeScannerView;
 import com.budiyev.android.codescanner.DecodeCallback;
+import com.example.blackjacks.MainActivity;
 import com.example.blackjacks.R;
 import com.example.blackjacks.databinding.FragmentGalleryBinding;
 import com.google.zxing.Result;
@@ -32,6 +33,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class GalleryFragment extends Fragment {
 
@@ -40,6 +45,9 @@ public class GalleryFragment extends Fragment {
     private CodeScanner mCodeScanner;
     JSONArray jobj;
     JSONObject userDetailsObj;
+    ScheduledExecutorService local_scheduler;
+    int countdownStarter = 0;
+    Boolean runSchedule = true;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -53,6 +61,40 @@ public class GalleryFragment extends Fragment {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+
+        final Runnable runnable = new Runnable() {
+
+
+            {
+                try {
+                    local_scheduler = Executors.newScheduledThreadPool(1);
+                    countdownStarter = ((MainActivity)getActivity()).intervalObj.getInt("inspection_min") * 60;
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            public void run() {
+
+                System.out.println(countdownStarter);
+                countdownStarter--;
+
+                if (countdownStarter < 0) {
+                    System.out.println("Timer Over!");
+                    runSchedule = true;
+                    //sendNotification(email,"Failed to attend to device in 2 min");
+                    //local_scheduler.
+                    local_scheduler.shutdown();
+                    Toast.makeText(getContext(), "Continue to the next CP ", Toast.LENGTH_LONG).show();
+                    try {
+                        countdownStarter = ((MainActivity)getActivity()).intervalObj.getInt("inspection_min") * 60;
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
 
         galleryViewModel =
                 new ViewModelProvider(this).get(GalleryViewModel.class);
@@ -72,8 +114,19 @@ public class GalleryFragment extends Fragment {
                     public void run() {
                         String done ="mm";
                         try {
-                            done = confirmCP(userDetailsObj.getString("id"),
-                                                    result.getText().trim());
+                            if(runSchedule) {
+                                done = confirmCP(userDetailsObj.getString("id"),
+                                        result.getText().trim());
+                                runSchedule = false;
+                            }
+                            else
+                            {
+                                Toast.makeText(activity, "Wait " + (countdownStarter /60) + " min", Toast.LENGTH_LONG).show();
+                            }
+                            if (done == "CONFIRMED")
+                            {
+                                local_scheduler.scheduleAtFixedRate(runnable, 0, 1, SECONDS);
+                            }
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }

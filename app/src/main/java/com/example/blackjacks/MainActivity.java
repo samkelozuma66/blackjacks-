@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
     JSONArray jobj;
     JSONObject userDetailsObj;
     JSONObject allocationObj;
-    JSONObject intervalObj;
+    public JSONObject intervalObj;
     JSONObject shiftObj;
     JSONObject cpObj;
     String cpInfo;
@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
         Intent i = getIntent();
         email = i.getStringExtra("username");
         Timer timer = new Timer();
-        scheduler = Executors.newScheduledThreadPool(1);
+
         final Runnable runnable = new Runnable() {
             int countdownStarter = 120;
 
@@ -95,7 +95,8 @@ public class MainActivity extends AppCompatActivity {
                 if (countdownStarter < 0) {
                     System.out.println("Timer Over!");
                     sendNotification(email,"Failed to attend to device in 2 min");
-                    scheduler.shutdown();
+                    //this.finalize();
+                    //scheduler.shutdown();
                 }
             }
         };
@@ -150,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     System.out.println("Time to patrol");
+                    scheduler = Executors.newScheduledThreadPool(1);
 
                     MediaPlayer mp = MediaPlayer.create(getBaseContext(),R.raw.sound_noti);
                     mp.setLooping(true);
@@ -208,8 +210,10 @@ public class MainActivity extends AppCompatActivity {
 
                     NotificationManager mNotificationManager = (NotificationManager) getSystemService(getBaseContext().NOTIFICATION_SERVICE);
 
-// notificationID allows you to update the notification later on.
+                    // notificationID allows you to update the notification later on.
+
                     mNotificationManager.notify(1, mBuilder.build());*/
+
                     scheduler.scheduleAtFixedRate(runnable, 0, 1, SECONDS);
                     //scheduler.schedule(runnable,0,SECONDS);
                     //scheduler.execute(runnable);
