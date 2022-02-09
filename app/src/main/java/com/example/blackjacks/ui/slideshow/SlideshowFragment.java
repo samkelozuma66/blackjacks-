@@ -19,11 +19,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.blackjacks.R;
 import com.example.blackjacks.databinding.FragmentSlideshowBinding;
+import com.example.blackjacks.ui.home.HomeFragment;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -94,6 +97,15 @@ public class SlideshowFragment extends Fragment {
                                                         title.getText().toString(),
                                                         message.getText().toString());
                         Toast.makeText(getContext(), resp, Toast.LENGTH_LONG).show();
+                        if (resp == "Feedback Sent")
+                        {
+                            Fragment home = new HomeFragment();
+                            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                            fragmentTransaction.replace(R.id.content_main, home);
+                            fragmentTransaction.addToBackStack(null);
+                            fragmentTransaction.commit();
+                        }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -258,7 +270,7 @@ public class SlideshowFragment extends Fragment {
 
                 if (serverResponseCode == 200) {
 
-                    resp = "File Uploaded";
+                    resp = "Feedback Sent";
                     // messageText.setText(msg);
                     //Toast.makeText(ctx, "File Upload Complete.",
                     //      Toast.LENGTH_SHORT).show();

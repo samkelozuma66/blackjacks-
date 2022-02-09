@@ -504,7 +504,7 @@ public class MainActivity extends AppCompatActivity {
             String log = sb.toString();
             Log.d(TAG, log);
             System.out.println("log"+log);
-            Toast.makeText(context, log, Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Patrol Started", Toast.LENGTH_LONG).show();
         }
 
     }
